@@ -1,5 +1,5 @@
 
-# Discovery Phase
+# ACROSS ORCA Open Call 1
 
 The provided code was implemented for the ACROSS experiment part of ORCA Open Call 1. It aimed at demonstrating the feasibility of the AuRoRA resource allocation framework based on Markov Random Fields for the first time in real cognitive radio topologies implemented via SDR.
 
