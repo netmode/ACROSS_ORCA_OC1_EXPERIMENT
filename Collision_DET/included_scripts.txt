@@ -1,0 +1,8 @@
+channel_energy.py:
+Records the energy measurements of the specified channel in mean_power.txt.
+
+avg.py:
+Calculates the mean and the variance of the energy measurements recorded.
+
+energy_based_decision.py:
+is_empty function compares the mean energy measured with the predetermined background noise level threshold and infers if the channel is empty or occupied.

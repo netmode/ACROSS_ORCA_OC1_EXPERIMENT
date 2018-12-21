@@ -1,0 +1,6 @@
+##### EXAMPLE OF 4 CHANNELS IN NODE WITH ID=3 #######
+
+##### proper order of vectors: ID a n c u     #######
+
+
+3 1 0 1 1 1 0 1 2 0.9 0.0 0.98 0.6 1 0 0 1

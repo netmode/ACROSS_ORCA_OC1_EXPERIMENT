@@ -1,0 +1,38 @@
+radio_trasmit.py:
+Transmits packets at a certain channel, using GMSK modulation for 0.25s. Used for broadcasting vectors.
+
+radio_receive.py:
+A radio receiver that keeps listening until the node is instructed to transmit. 
+
+simple_radio_trasmit.py:
+Transmits packets at a certain channel, using GMSK modulation for the specified time. Used for actual data (not signalling) transmissions.
+
+simple_radio_receive.py:
+A radio receiver used for the actual data receptions.
+
+repeater.py:
+Implements the intermediate relay operation in multi-hop communications. It transmits the data that it is receiving.
+
+transceiver.py:
+Implements the Tx/Rx operation. There are two independent data flows: one transmission and one reception.
+
+flag_mod.py:
+A global flag seen by all files in the directory. Used to indicate the right time to send and receive packets. Used in radio_receive.py and node_threading.py
+
+node_threading.py:
+Main script of the folder. Responsible for the exchange of vectors between neighbours in the topology. Opens seperate threads in order to coordinate the transmitting and receiving phases of the node. Needs final_controller.py script running in the controller node for the successfull execution.
+
+final_controller.py:
+Runs only in the conroller node. Used for the coordination of nodes. Tells each node when it is the time to transmit its vectors and when to hear for the neighbors transmissions. Uses udp packets.
+
+udp_receive.py:
+A udp receiver that hears at a specific port until there is a transmission for the specific port. When the transmission is over, receiver closes.
+
+udp_transmit.py:
+A udp transmitter used to send packets in a certain ip and port for 0.25 seconds.
+
+rv.py:
+Reads the vectors from file 'dataReceived.txt'. This file contains vectors from every neighboring node multiple times. rv.py discards possible damaged lines and returns the most common lines in the file, i.e. the vectors send from the neighbors.
+
+sendMe[i].txt:
+A text file used to tell the controller that the node is ready to send. Must contain the node id as the first number.

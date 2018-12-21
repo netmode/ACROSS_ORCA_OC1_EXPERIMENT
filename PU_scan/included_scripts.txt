@@ -1,0 +1,5 @@
+PU_detect_channel.py:
+PUs transmit frames using a certain access code. PU_detect_channel listens in the channel for frames with that specific access code and writes them to a file.
+
+PU_availability.py:
+Detects PU activity in every channel by calling PU_detect_channel. By checking the size of the corresponding file it can infer if the channel was with or without PU transmissions.
