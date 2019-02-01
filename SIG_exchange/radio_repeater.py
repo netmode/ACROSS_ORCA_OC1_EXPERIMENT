@@ -179,10 +179,10 @@ def repeat(freq_tx, freq_rx, duration, gain, top_block_cls=repeater, options=Non
     tb = top_block_cls(freq_tx, freq_rx, gain)
     tb.start()
     # keep listening until you start receiving
-    while os.stat('/total/checkMe.txt').st_size<500:
+    while os.stat('/root/total/checkMe.txt').st_size<500:
         pass
     time.sleep(duration-0.2) # keep receiving and transmitting for the specified time
-    sz = os.stat('/total/checkMe.txt').st_size
+    sz = os.stat('/root/total/checkMe.txt').st_size
     tb.stop()
     tb.wait()
     os.remove('/total/checkMe.txt')
