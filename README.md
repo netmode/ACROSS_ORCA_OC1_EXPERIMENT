@@ -46,6 +46,14 @@ In order to run our code please run the total_node.py script providing the prope
  
  <b><i> The provided code together with the auxiliary files are suited for direct deployment on ORBIT's Sandbox 4 with a square topology layout. To deploy in different execution environments new parametrization is required at the appointed places (see code comments and README files) </i> </b> 
 
+
+### AUXILIARY SCRIPTS
+
+* enable_usrp2.sh: Used in ORBIT Grid in order to enable the N210 USRPs
+* reset_usrp.sh: Used to reset B205mini in ORBIT Sandbox 4 when running on Ubuntu 16
+* shuffle_config.py: Used to create more experiments by shuffling the original config.json
+
+
 ## Equally Contributing Authors
 
 * <b> Grigoris Kakkavas </b>, gkakkavas@netmode.ntua.gr
