@@ -213,7 +213,7 @@ def mrf(incr, transmission_list, ID, sweeps, controller_id, controller_ip, chann
     collisions = 0  # log number of collisions that take place when you are receiving
     bandwidth = 10e6  # THE SAME FOR ALL CHANNELS
     
-    control_channel = 3400e6
+    control_channel = 400e6
     duration = 3  # This is the duration of the data transmission slot
     c_duration = 1  # This is the duration of the control transmissions
 
