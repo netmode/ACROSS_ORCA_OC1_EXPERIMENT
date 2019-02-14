@@ -8,21 +8,21 @@
 
 import numpy as np
 
-def first_potential(x,a,l1=4,d1=500,A=2,B=-1,C=2,d=0):
+def first_potential(x,a,rs,l1=2,d1=500,A=2,B=-1,C=2,d=0):
 
-    def sig(x,A,B,C,d):
-        return (A/(1+1*np.exp(-C*(x-d)))) + B
+    def sig(x,A,B,C,d, rs):
+        return (A/(1+1*np.exp(-C*(x-d-rs)))) + B
 
     numAssignCh = sum(x)    #L1-norm 
     vect=[1]*len(x)        #create vector (1,1,1,1)
 
     if numAssignCh >=1 and np.inner(x,a) == np.inner(x,vect):
-        return l1*(1-sig(numAssignCh,A,B,C,d))
+        return l1*(1-sig(numAssignCh,A,B,C,d,rs))
     else:
         return d1        # d1  high value
 
     
-def second_potential(xs,cs,dictTsU,Gs,N,U,j,xj,aj,l2=2,l3=2,d2=500): # called only for j in Gs
+def second_potential(xs,cs,dictTsU,Gs,N,U,j,xj,aj,l2=3,l3=5,d2=500): # called only for j in Gs
     
     def calc_nsk(us, nk, uk):
         nk = [x if x <= 1 else 2 for x in nk]
@@ -32,7 +32,7 @@ def second_potential(xs,cs,dictTsU,Gs,N,U,j,xj,aj,l2=2,l3=2,d2=500): # called on
     
     Ts = dictTsU.keys()
     if (j in Ts) and np.inner(xs,aj)!=0:
-        return l2*np.inner(xs,xj)
+        return l2*np.inner(xs,xj) + l3*np.inner(xs,cs) 
     elif j not in Ts :    # ONLY for j in Gs
         # find summ
         summ = 0
@@ -56,7 +56,7 @@ def makeDictionary(list):
     return dictionary
 
 
-def energy_calc(TsU, GsU, GsA, GsN, myU, myA, myC):
+def energy_calc(TsU, GsU, GsA, GsN, myU, myA, myC, rs):
 
     dictTsU = makeDictionary(TsU)
 
@@ -67,7 +67,7 @@ def energy_calc(TsU, GsU, GsA, GsN, myU, myA, myC):
     dictGsN = makeDictionary(GsN)
     #dictGsC = makeDictionary(GsC)
 
-    local_energy = first_potential(myU,myA) + sum(second_potential(myU,myC,dictTsU,dictGsU.keys(),dictGsN,dictGsU,j,dictGsU[j],dictGsA[j]) for j in dictGsU.keys())
+    local_energy = first_potential(myU,myA,rs) + sum(second_potential(myU,myC,dictTsU,dictGsU.keys(),dictGsN,dictGsU,j,dictGsU[j],dictGsA[j]) for j in dictGsU.keys())
 
     return local_energy
 
