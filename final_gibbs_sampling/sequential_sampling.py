@@ -85,15 +85,15 @@ def roulette_wheel_sel2(population, probabilities):
     return res
 
 
-def local_conditional_numerator(T, TsU, GsU, GsA, GsN, myU, myA, myC, rs):
-    P_s_num = np.exp( -1/T * local_energy.energy_calc(TsU, GsU, GsA, GsN,   myU, myA, myC, rs) )
+def local_conditional_numerator(T, TsU, GsU, GsA, GsN, myU, myA, myC):
+    P_s_num = np.exp( -1/T * local_energy.energy_calc(TsU, GsU, GsA, GsN, myU, myA, myC) )
     return P_s_num
 
 
-def local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, rs, poss_u): # Zs
+def local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, poss_u): # Zs
     P_s_den = 0
     for u in poss_u:
-        P_s_den += local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC, rs)
+        P_s_den += local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC)
     return P_s_den
 
 
@@ -117,12 +117,12 @@ def temperature(sweep,c0):
     return T
 
 
-def draw_sample(T, TsU, GsU, GsA, GsN, myA, myC, rs):
+def draw_sample(T, TsU, GsU, GsA, GsN, myA, myC):
     prob_list = list()
     poss_u = all_poss_u(myA)
-    Zs = local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, rs, poss_u)
+    Zs = local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, poss_u)
     for u in poss_u:
-        P_s = local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC, rs) / Zs
+        P_s = local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC) / Zs
         prob_list.append(P_s)
     
     ## implementing roulette (c)
@@ -130,7 +130,7 @@ def draw_sample(T, TsU, GsU, GsA, GsN, myA, myC, rs):
     return samp
 
 
-def gibbs_samp(ID, ips, sweeps, TsU, GsU, GsA, GsN, myA, myC, myU, rs):
+def gibbs_samp(ID, ips, sweeps, TsU, GsU, GsA, GsN, myA, myC, myU):
 
     for w in range(1,sweeps+1):
         
@@ -160,7 +160,7 @@ def gibbs_samp(ID, ips, sweeps, TsU, GsU, GsA, GsN, myA, myC, myU, rs):
                         GsU[index] = [ancestor_id] + n_vectors[3] # replace new value
         else:
             time.sleep(1.5)
-        u_star = draw_sample(T, TsU, GsU, GsA, GsN, myA, myC, rs)
+        u_star = draw_sample(T, TsU, GsU, GsA, GsN, myA, myC)
         affected = [i[0] for i in TsU]
         length = 6 + len(affected) + len(myU)*2
         MYstring = str(ID) + ' * ' + lst2str(affected) + '* ' + lst2str(myU) + '* ' + lst2str(u_star) + '* ' + str(length)
