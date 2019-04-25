@@ -36,7 +36,7 @@ class simple_radio_transmit(gr.top_block):
         # Blocks
         ##################################################
         self.uhd_usrp_sink_0 = uhd.usrp_sink(
-            ",".join(("", "")),
+            ",".join(("addr=192.168.10.2", "")),
             uhd.stream_args(
                 cpu_format="fc32",
                 channels=range(1),
@@ -95,7 +95,7 @@ class simple_radio_transmit(gr.top_block):
         self.blocks_file_source_0.open(self.filename, True)
 
 
-def transmit(freq, filename,  gain, top_block_cls=simple_radio_transmit, options=None):
+def transmit(freq, filename,  gain, sec, top_block_cls=simple_radio_transmit, options=None):
     """ PU transmissions with the predetermined access code
         Inputs
         freq: central frequency of the channel
@@ -104,10 +104,7 @@ def transmit(freq, filename,  gain, top_block_cls=simple_radio_transmit, options
     tb = top_block_cls(freq, filename, gain)
     tb.start()
     print 'I am transmitting at', freq
-    try:
-        raw_input('Press Enter to Quit: ')
-    except EOFError:
-        pass
+    time.sleep(sec)
     tb.stop()
     tb.wait()
 
@@ -116,4 +113,5 @@ if __name__ == '__main__':
     freq = eval(sys.argv[1])
     filename = sys.argv[2]
     gain = eval(sys.argv[3])
-    transmit(freq, filename, gain)
+    sec = eval(sys.argv[4])
+    transmit(freq, filename, gain, sec)

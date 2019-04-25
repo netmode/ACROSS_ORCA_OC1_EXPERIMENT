@@ -1,0 +1,141 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+##################################################
+# GNU Radio Python Flow Graph
+# Script: simple_radio_receive.py
+# Authors: K Tsitseklis, G. Kakkavas
+# Generated: Sat Oct 13 13:38:21 2018
+##################################################
+
+
+from gnuradio import blocks
+from gnuradio import digital
+from gnuradio import eng_notation
+from gnuradio import filter
+from gnuradio import gr
+from gnuradio import uhd
+from gnuradio.eng_option import eng_option
+from gnuradio.filter import firdes
+from grc_gnuradio import blks2 as grc_blks2
+from optparse import OptionParser
+import time
+import sys
+import os
+from datetime import datetime
+
+class simple_radio_receive(gr.top_block):
+
+    def __init__(self, freq, filename, gain):
+        gr.top_block.__init__(self, "Simple Radio Receive")
+
+        ##################################################
+        # Variables
+        ##################################################
+        self.samp_rate = samp_rate = 200000
+        self.freq = freq
+        self.filename = filename 
+        
+        ##################################################
+        # Blocks
+        ##################################################
+        self.uhd_usrp_source_0 = uhd.usrp_source(
+            ",".join(("addr=192.168.10.2", "")),
+            uhd.stream_args(
+                cpu_format="fc32",
+                channels=range(1),
+            ),
+        )
+        self.uhd_usrp_source_0.set_samp_rate(samp_rate)
+        self.uhd_usrp_source_0.set_center_freq(freq, 0)
+        self.uhd_usrp_source_0.set_gain(gain, 0)
+        self.uhd_usrp_source_0.set_bandwidth(10e6, 0)
+        self.low_pass_filter_0 = filter.fir_filter_ccf(1, firdes.low_pass(
+            1, samp_rate, samp_rate/2 - 2e3, (samp_rate/2 -2e3)/4, firdes.WIN_HAMMING, 6.76))
+        self.digital_gmsk_demod_0 = digital.gmsk_demod(
+            samples_per_symbol=2,
+            gain_mu=0.175,
+            mu=0.5,
+            omega_relative_limit=0.005,
+            freq_error=0.0,
+            verbose=False,
+            log=False,
+        )
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vcc((1, ))
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, filename, True)
+        self.blocks_file_sink_0.set_unbuffered(True)
+        self.blks2_packet_decoder_0 = grc_blks2.packet_demod_b(grc_blks2.packet_decoder(
+                access_code='010110011011101100010101011111101001001110001011010001101010001',
+                threshold=-1,
+                callback=lambda ok, payload: self.blks2_packet_decoder_0.recv_pkt(ok, payload),
+            ),
+        )
+
+        ##################################################
+        # Connections
+        ##################################################
+        self.connect((self.blks2_packet_decoder_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.low_pass_filter_0, 0))
+        self.connect((self.digital_gmsk_demod_0, 0), (self.blks2_packet_decoder_0, 0))
+        self.connect((self.low_pass_filter_0, 0), (self.digital_gmsk_demod_0, 0))
+        self.connect((self.uhd_usrp_source_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+
+    def get_samp_rate(self):
+        return self.samp_rate
+
+    def set_samp_rate(self, samp_rate):
+        self.samp_rate = samp_rate
+        self.uhd_usrp_source_0.set_samp_rate(self.samp_rate)
+        self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, self.samp_rate/2 - 2e3, self.samp_rate/4, firdes.WIN_HAMMING, 6.76))
+
+    def get_freq(self):
+        return self.freq
+
+    def set_freq(self, freq):
+        self.freq = freq
+        self.uhd_usrp_source_0.set_center_freq(self.freq, 0)
+
+    def get_filename(self):
+        return self.filename
+
+    def set_filename(self, filename):
+        self.filename = filename
+        self.blocks_file_sink_0.open(self.filename)
+
+
+def scan(freq_rx_list, sec, gain, top_block_cls=simple_radio_receive, options=None):
+    """ freq: the central frequency of the channel
+        filename: file where the received data are stored
+        sec: duration of reception 
+        gain: rx gain """
+    gyres = 2.0
+    filename = '/root/total/PU_scan/channel_' + '0' + '.txt'
+    tb = top_block_cls(freq_rx_list[0], filename, gain)
+    tb.start()
+    time_chunk = sec/(len(freq_rx_list)*gyres)
+    a = [1]*len(freq_rx_list)
+    for j in range(0,int(gyres)):
+        for i in range(1,len(freq_rx_list)):
+            print 'I am scanning freq ', freq_rx_list[i-1]
+            time.sleep(time_chunk)
+            filename = '/root/total/PU_scan/channel_' + str(i) + '.txt'
+            tb.set_filename(filename)
+            tb.set_freq(freq_rx_list[i])
+        print 'I am scanning freq ', freq_rx_list[-1]
+        time.sleep(time_chunk)
+        for f in range(0,len(freq_rx_list)):
+            if os.stat('/root/total/PU_scan/channel_'+str(f)+'.txt').st_size>0:
+                a[f] = 0
+    
+    for i in range(0,len(freq_rx_list)):
+        os.remove('/root/total/PU_scan/channel_'+str(i)+'.txt')
+    tb.stop()
+    tb.wait()
+    return a
+
+
+if __name__ == '__main__':
+    freq_rx_list = eval(sys.argv[1])
+    sec = eval(sys.argv[2])
+    gain = eval(sys.argv[3])
+    a = scan(freq_rx_list, sec, gain)
+    print a

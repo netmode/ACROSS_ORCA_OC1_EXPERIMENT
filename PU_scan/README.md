@@ -19,20 +19,31 @@ It is also necessary to have access to the appropriate USRP devices with at leas
 
 The module can be executed by running the following command
 
-``` python  PU_availability.py channel_list gain    ```
+``` python  availability.py channel_list gain    ```
 
 It returns the availability vector where 1 means the channel is available and 0 means occupied by a Primary User (PU) 
 
 Where:
 * channel_list: A list containing the central frequencies of the channels of interest
+* sec: The time spent scanning each channel of the channel_list
 * gain: The gain used for the reception (rx_gain), needs to be specified according to the environment
  
  Example:
-	``` python PU_availability [600e6,650e6,700e6,750e6,800e6] 50```.
+	``` python availability [3600e6,3650e6,3700e6,3750e6,3800e6] 0.5 30 2```.
 
 The script PU_transmit.py is also included. It is used to simulate a Primary User's transmission.
 
- <b><i> The provided code is suited for direct deployment on ORBIT's Sandbox 4 . To deploy in different execution environments new parametrization is required for the receiving gain in the appropriate scripts (rx) </i> </b> 
+The script primary_users.py is executed in the primary users and it is responsible for realizing primary activity. It can be executed by running:
+
+``` python primary_users.py channel_list sec gain ```
+
+Where:
+* channel_list: A list containing the central frequencies of the channels of interest
+* sec: The time spent transmitting at a channel
+* gain: The gain used for the transmission (tx_gain), needs to be specified according to the environment
+
+
+ <b><i> The provided code is suited for direct deployment on ORBIT's Grid. To deploy in different execution environments new parametrization is required for the receiving gain in the appropriate scripts (rx) </i> </b> 
 
 ## Equally Contributing Authors
 
