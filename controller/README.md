@@ -21,27 +21,20 @@ It is also necessary to have access to the appropriate USRP devices with at leas
 
 ## Execution
 
-Three controller scripts are included in this module. Specifically:
-* discovery_controller.py: Used to synchronize the discovery phase. Usage:
- ``` python discovery_controller.py controller_IP port file1 file2 ```
+Two controller scripts are included in this module. Specifically:
+* controller.py: Used to synchronize SU nodes during discovery phase,initialization,signaling exchange, transmission round change. Usage:
+ ``` python controller.py controller_IP port file1 file2 PU_addr```
  Where:
 	* controller_IP: Controller's IP address
 	* port: The UDP port utilized
 	* file1, file2: Auxiliary text files used for message exchange between the nodes and the controller
 	
-* giibs_controller.py: Used for the gibbs sampling phase and for round change. Two instances with different ports must be executed. Usage:
-```python gibbs_controller.py file controller_ID port ```
+* semipar_controller.py: Used for the semi-parallel gibbs sampling phase, in order to update the nodes' states after each epoch. Usage:
+```python semipar_controller.py file controller_ID port ```
 Where:
 	* file: Auxiliary text file used for message exchange between the nodes and the controller 
 	* controller_ID: Controller's unique identifier
 	* port: UDP port utilized
-	
-* final_controller.py: The controller of the signalling exchange phase. Usage:
-```python final_controller.py controller_IP port file1 file2 ``` 
-Where:
-	* controller_IP: Controller's IP address
-	* port: The UDP port utilized
-	* file1, file2: Auxiliary text files used for message exchange between the nodes and the controller
 
 
 ## Equally Contributing Authors
