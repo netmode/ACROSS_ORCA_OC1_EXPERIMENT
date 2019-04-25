@@ -21,6 +21,9 @@ import udp_transmit
 import rv
 import os
 import json
+from scipy.stats import bernoulli
+
+
 
 def read_new_info(filename, nodeList):
     f = open(filename, 'r')
@@ -92,13 +95,9 @@ def local_conditional_numerator(T, TsU, GsU, GsA, GsN, myU, myA, myC, rs, u_prev
 
 def local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, rs, poss_u, u_prev): # Zs
     P_s_den = 0
-    numerators = dict()
     for u in poss_u:
-        u_str = reduce(lambda x,y: str(x)+str(y), u)
-        tmp = local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC, rs, u_prev)
-        numerators[u_str] = tmp
-        P_s_den += tmp
-    return P_s_den, numerators
+        P_s_den += local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC, rs, u_prev)
+    return P_s_den
 
 
 def all_poss_u(a):
@@ -120,81 +119,73 @@ def temperature(sweep,c0):
 def draw_sample(T, TsU, GsU, GsA, GsN, myA, myC, rs, u_prev):
     prob_list = list()
     poss_u = all_poss_u(myA)
-    Zs, numerators = local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, rs, poss_u, u_prev)
+    Zs = local_conditional_denumerator(T, TsU, GsU, GsA, GsN, myA, myC, rs, poss_u, u_prev)
     for u in poss_u:
-        u_str = reduce(lambda x,y: str(x)+str(y), u)
-        P_s = numerators[u_str] / Zs
+        P_s = local_conditional_numerator(T, TsU, GsU, GsA, GsN, u, myA, myC, rs, u_prev)/Zs
         prob_list.append(P_s)
     
     ## implementing roulette (c)
-    samp, prob = roulette_wheel_sel2(poss_u, prob_list)
-    return samp, prob
+    samp = roulette_wheel_sel2(poss_u, prob_list)
+    return samp
 
 
 def gibbs_samp(ID, ips, sweeps, TsU, GsU, GsA, GsN, myA, myC, myU, rs, convergence_filename):
-
+    nodeList = [int(x) for x in ips.keys()]
+    Ts_nodes = [n[0] for n in TsU]
+    Gs_nodes = [n[0] for n in GsU]
+    prob = 0
     for w in range(1,sweeps+1):
-        
-        T = temperature(w,2)
-        winners = list()
-        # sequential scheme = {3,4,5,6,...}
-        # port used for 8000
-        nodeList = [int(x) for x in ips.keys()]
-        if not(w==1 and ID==3):
-            
-            # new info is of the format: 
-            # ID * neighID1 neighID2 ... * new_u_id * old_u_id
-            # every time new info is added to the file
-            # before sending file is cleaned from possible repetitions
+        if (w != 1):
+            winners = list()
             udp_receive.receive(ips[ID], 8000, '/root/total/final_gibbs_sampling/new_info.txt')
             winners = read_new_info('/root/total/final_gibbs_sampling/new_info.txt', nodeList)
             data = get_new_vectors(winners)
             for n_vectors in data:
-                ancestor_id = n_vectors[0]
-                if ancestor_id in [i[0] for i in TsU]: # ancestor_id in TsU
+                node_id = n_vectors[0]
+                if node_id in Ts_nodes:
                     if n_vectors[2] != n_vectors[3]: # change has happened
-                        index = TsU.index([ancestor_id] + n_vectors[2]) # find index of u vector of the right node
-                        TsU[index] = [ancestor_id] + n_vectors[3] # replace new value
-                if ancestor_id in [i[0] for i in GsU]:
+                        index = TsU.index([node_id] + n_vectors[2]) # find index of u vector
+                        TsU[index] = [node_id] + n_vectors[3] # replace new value
+                if node_id in Gs_nodes:
                     if n_vectors[2] != n_vectors[3]: # change has happened
-                        index = GsU.index([ancestor_id] + n_vectors[2]) # find index of u vector of the right node
-                        GsU[index] = [ancestor_id] + n_vectors[3] # replace new value
+                        index = GsU.index([node_id] + n_vectors[2]) # find index of u vector
+                        GsU[index] = [node_id] + n_vectors[3] # replace new value
                 for j,node in enumerate([i[0] for i in GsN]):
                     if node in n_vectors[1]:
-                        GsN[j] = [k-g for k,g in zip(GsN[j], [ancestor_id] + n_vectors[2])] # subtract old u
-                        GsN[j] = [k+g for k,g in zip(GsN[j], [ancestor_id] + n_vectors[3])] # add new u
-
+                        GsN[j] = [k-g for k,g in zip(GsN[j], [node_id] + n_vectors[2])] 
+                        GsN[j] = [k+g for k,g in zip(GsN[j], [node_id] + n_vectors[3])] 
+                
+        T = temperature(w,2)
+        tau = 0.2 # may need fine-tuning
+        temp = bernoulli.rvs(tau, size=1)
+        
+        if (temp[0] == True):
+            print "I will update my state!"
+            u_star, prob = draw_sample(T, TsU, GsU, GsA, GsN, myA, myC, rs, myU)
         else:
-            time.sleep(1.5)
-        u_star, prob = draw_sample(T, TsU, GsU, GsA, GsN, myA, myC, rs, myU)
+            print "I will NOT update my state!"
+            u_star = myU
+            
+
         loc_energy = local_energy.energy_calc(TsU, GsU, GsA, GsN, u_star, myA, myC, rs, myU)
         c_f = open(convergence_filename,'a')
         c_f.write(str(w) + '    ' + lst2str(u_star) + '    ' +   str(round(loc_energy,3)) + '    ' + str(round(prob,3)) + '\n')
         c_f.close()
-
-        affected = [i[0] for i in TsU]
+        print 'i picked u: ', u_star
+        affected = Ts_nodes
         length = 6 + len(affected) + len(myU)*2
         MYstring = str(ID) + ' * ' + lst2str(affected) + '* ' + lst2str(myU) + '* ' + lst2str(u_star) + '* ' + str(length)
         myU = u_star
         if w!=1:
             os.remove('/root/total/final_gibbs_sampling/new_info.txt')
         f = open('/root/total/final_gibbs_sampling/new_info.txt', 'w+') ## must overwrite
-        for w in winners:
-            if int(w.split()[0]) != ID:
-                f.write(w)
         f.write(MYstring)
         f.write('\n\n')
         f.close()
         copyfile('/root/total/final_gibbs_sampling/new_info.txt','/root/total/final_gibbs_sampling/myNew_info.txt')
-        
-        target = ID + 1                   ## VISITING SCHEME
-        tls = ips.keys()
-        mx = max(ips.keys())
-        tls.remove(mx)
-        if target not in tls:
-           target = sorted(ips.keys())[0]
-        udp_transmit.transmit(ips[target], 8000, '/root/total/final_gibbs_sampling/new_info.txt')
+        mx = max(ips.keys()) #ID of controller
+        time.sleep(1.9)
+        udp_transmit.transmit(ips[mx], 8000+int(ID), '/root/total/final_gibbs_sampling/new_info.txt')
         os.remove('/root/total/final_gibbs_sampling/new_info.txt')
 
     return u_star
-        

@@ -28,7 +28,7 @@ def getVectors(filename, nCh, nodeList):
         if len(line.split()) != (nCh*4)+1:
             continue
         try:    
-            n = int(line[0])
+            n = int(line.split()[0])
             if n not in nodeList:
                 continue
         except ValueError:
@@ -39,7 +39,6 @@ def getVectors(filename, nCh, nodeList):
     k = len(nodesFound)
     
     winners = k_mostCommonLines(lines, k)
-    #print winners
     
     A = list()
     N = list()
@@ -69,4 +68,5 @@ if __name__ == '__main__':
     ##TESTING
     filename = sys.argv[1]
     nCh = int(sys.argv[2])
-    getVectors(filename, nCh)
+    nodeList = eval(sys.argv[3])
+    getVectors(filename, nCh, nodeList)

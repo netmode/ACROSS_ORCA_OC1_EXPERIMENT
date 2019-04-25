@@ -33,10 +33,11 @@ def rem_dupl(alist):
             newl.append(el)
     return newl
 
-def udp_listen(IP_address, udp_port, filename):           
+def udp_listen(IP_address, udp_port, filename):
     udp_receive.receive(IP_address, udp_port, filename) 
     global counter
     counter = counter + 1
+    #print udp_port           
 
 
 def udp_send(IP_address, udp_port, filename):           
@@ -65,7 +66,6 @@ def one_iteration(filename, filename1, filename2, filename3, ID, nCh, neigh):
     # open receivers in threads
     for ip in neigh:
         snd = rev_lookup(ips, ip)
-        # port = sender*1000 + destination
         port = int(snd)*1000 + int(ID) 
         # open a receiver
         temp = threading.Thread(target=udp_listen, args=[ips[ID], port, filename2, ])
@@ -104,7 +104,6 @@ def one_iteration(filename, filename1, filename2, filename3, ID, nCh, neigh):
     for t in threadS_array:
         t.join()
   
-    time.sleep(0.1)
 
     return (winners, lA, lN, lC, lU)
     
@@ -117,12 +116,12 @@ def exchange(ID, filename3, nCh, neigh):
     filename2 = '/root/total/final_gibbs_sampling/dataReceived.txt'
 
     winners, tsA, tsN, tsC, tsU = one_iteration(filename, filename1, filename2, filename3, ID, nCh, neigh)
-    
+    print winners    
     f2 = open(filename3, 'w')
     for w in winners:
         f2.write(w)
     f2.close()
-    
+    copyfile(filename3, '/root/total/final_gibbs_sampling/tzitzi.txt')   
     _, gA, gN, gC, gU = one_iteration(filename, filename1, filename2, filename3, ID, nCh, neigh)
     
     # remove possible duplicates
