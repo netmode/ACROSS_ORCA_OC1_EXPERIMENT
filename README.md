@@ -50,7 +50,7 @@ In order to run our code please run the total_node.py script providing the prope
 ### Auxiliary Scripts
 
 * enable_usrp2.sh: Used in ORBIT Grid in order to enable the N210 USRPs
-* reset_usrp.sh: Used to reset B205mini in ORBIT Sandbox 4 when running on Ubuntu 16
+* reset_usrp.sh: Used to reset B205mini in ORBIT Grid when running on Ubuntu 16
 * shuffle_config.py: Used to create more experiments by shuffling the original config.json
 
 
