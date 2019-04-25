@@ -4,7 +4,7 @@
 # GNU Radio Python Flow Graph
 # Script: simple_radio_transmit.py
 # Authors: K. Tsitseklis, G. Kakkavas
-# Generated: Sat Oct 13 13:19:16 2018
+# Generated: Sat Jan 19 13:26:16 2019
 ##################################################
 
 
@@ -95,22 +95,29 @@ class simple_radio_transmit(gr.top_block):
         self.blocks_file_source_0.open(self.filename, True)
 
 
-def transmit(freq, filename, sec, gain, top_block_cls=simple_radio_transmit, options=None):
+def transmit(freq_tx_list, filename, sec, gain, top_block_cls=simple_radio_transmit, options=None):
     """ freq: the central frequency of the channel
         filename: file that contains the data about to be transmitted
         sec: duration of transmission 
         gain: tx gain """
-    tb = top_block_cls(freq, filename, gain)
+    
+    tb = top_block_cls(freq_tx_list[0], filename, gain)
     tb.start()
-    print 'I am transmitting at',freq
-    time.sleep(sec)
+    time_chunk = sec/(len(freq_tx_list)*1.0)
+    for i in range(1,len(freq_tx_list)):
+        print 'I am transmitting at ', freq_tx_list[i-1]
+        time.sleep(time_chunk)
+        tb.set_freq(freq_tx_list[i])
+    print 'I am transmitting at ', freq_tx_list[-1]
+    time.sleep(time_chunk)
+   
     tb.stop()
     tb.wait()
 
 
 if __name__ == '__main__':
-    freq = eval(sys.argv[1])
+    freq_tx_list = eval(sys.argv[1])
     filename = sys.argv[2]
     sec = eval(sys.argv[3])
     gain = eval(sys.argv[4])
-    transmit(freq, filename, sec, gain)
+    transmit(freq_tx_list, filename, sec, gain)

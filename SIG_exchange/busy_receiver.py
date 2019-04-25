@@ -110,10 +110,10 @@ def receive(freq, filename, sec, gain, top_block_cls=simple_radio_receive, optio
     tb = top_block_cls(freq, filename, gain)
     tb.start()
     # keep listening until you start receiving
-    t1 = datetime.now()
-    while os.stat(filename).st_size<500 and (datetime.now()-t1).total_seconds()<=12:
+    t_start = datetime.now()
+    while (os.stat(filename).st_size<500 and (datetime.now()-t_start).total_seconds()<=sec):
         pass
-    time.sleep(sec)
+    #time.sleep(sec)
     tb.stop()
     tb.wait()
 

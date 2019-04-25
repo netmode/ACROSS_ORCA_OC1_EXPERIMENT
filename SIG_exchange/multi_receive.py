@@ -4,7 +4,7 @@
 # GNU Radio Python Flow Graph
 # Script: simple_radio_receive.py
 # Authors: K Tsitseklis, G. Kakkavas
-# Generated: Sat Oct 13 13:38:21 2018
+# Generated: Sat Jan 19 13:30:18 2019
 ##################################################
 
 
@@ -102,25 +102,29 @@ class simple_radio_receive(gr.top_block):
         self.blocks_file_sink_0.open(self.filename)
 
 
-def receive(freq, filename, sec, gain, top_block_cls=simple_radio_receive, options=None):
+def receive(freq_rx_list, filename, sec, gain, top_block_cls=simple_radio_receive, options=None):
     """ freq: the central frequency of the channel
         filename: file where the received data are stored
         sec: duration of reception 
         gain: rx gain """
-    tb = top_block_cls(freq, filename, gain)
+    gyres = 2.0
+    tb = top_block_cls(freq_rx_list[0], filename, gain)
     tb.start()
-    # keep listening until you start receiving
-    t1 = datetime.now()
-    while os.stat(filename).st_size<500 and (datetime.now()-t1).total_seconds()<=12:
-        pass
-    time.sleep(sec)
+    time_chunk = sec/(len(freq_rx_list)*gyres)
+    for j in range(0,int(gyres)):
+        for i in range(1,len(freq_rx_list)):
+            print 'I am listening at ', freq_rx_list[i-1]
+            time.sleep(time_chunk)
+            tb.set_freq(freq_rx_list[i])
+        print 'I am listening at ', freq_rx_list[-1]
+        time.sleep(time_chunk)
     tb.stop()
     tb.wait()
 
 
 if __name__ == '__main__':
-    freq = eval(sys.argv[1])
+    freq_rx_list = eval(sys.argv[1])
     filename = sys.argv[2]
     sec = eval(sys.argv[3])
     gain = eval(sys.argv[4])
-    receive(freq, filename, sec, gain)
+    receive(freq_rx_list, filename, sec, gain)

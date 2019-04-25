@@ -31,7 +31,7 @@ class transceiver(gr.top_block):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 200000
-        self.gain_tx = gain_tx = 55
+        self.gain_tx = gain_tx = 50
         self.gain_rx = gain_rx = 50
         self.freq_tx = freq_tx
         self.freq_rx = freq_rx
@@ -42,7 +42,7 @@ class transceiver(gr.top_block):
         # Blocks
         ##################################################
         self.uhd_usrp_source_0 = uhd.usrp_source(
-            ",".join(("", "")),
+            ",".join(("addr=192.168.10.2", "")),
             uhd.stream_args(
                 cpu_format="fc32",
                 channels=range(1),
@@ -54,7 +54,7 @@ class transceiver(gr.top_block):
         self.uhd_usrp_source_0.set_antenna('TX/RX', 0)
         self.uhd_usrp_source_0.set_bandwidth(10e6, 0)
         self.uhd_usrp_sink_0 = uhd.usrp_sink(
-            ",".join(("", "")),
+            ",".join(("addr=192.168.10.2", "")),
             uhd.stream_args(
                 cpu_format="fc32",
                 channels=range(1),

@@ -40,7 +40,7 @@ def getVectors(filename, nCh, nodeList):
         if len(line.split()) != (1+nCh*4):
             continue
         try:    
-            n = int(line[0])
+            n = int(line.split()[0])
             if n not in nodeList:
                 continue
         except ValueError:
@@ -48,6 +48,7 @@ def getVectors(filename, nCh, nodeList):
             
         if n not in nodesFound:
             nodesFound.append(n)
+  
     k = len(nodesFound)
     
     # winners is a list of the lines corresponding to the nodes
@@ -57,6 +58,8 @@ def getVectors(filename, nCh, nodeList):
     N = list()
     C = list()
     U = list()     
+
+    print winners
     
     for w in winners:
         tmp = w.split()
@@ -83,3 +86,4 @@ if __name__ == '__main__':
     nCh = int(sys.argv[2])
     nodeList = eval(sys.argv[3])
     w, a, n, c, u = getVectors(filename, nCh, nodeList)
+    print w

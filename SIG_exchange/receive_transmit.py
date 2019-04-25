@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 ##################################################
 # GNU Radio Python Flow Graph
-# Title: radio_repeater.py
-# Authors: G. Kakkavas, K. Tsitseklis
-# Generated: Wed Oct 24 10:06:50 2018
+# Script: transceiver.py
+# Authors: K. Tsitseklis, G. Kakkavas
+# Generated: Thu Oct 18 10:29:35 2018
 ##################################################
 
 
@@ -22,10 +22,10 @@ import time
 import os
 import sys
 
-class repeater(gr.top_block):
+class transceiver(gr.top_block):
 
-    def __init__(self, freq_tx, freq_rx, gain, fname):
-        gr.top_block.__init__(self, "Repeater")
+    def __init__(self, freq_tx, freq_rx, filename_out, filename_in, gain):
+        gr.top_block.__init__(self, "Transceiver")
 
         ##################################################
         # Variables
@@ -35,12 +35,8 @@ class repeater(gr.top_block):
         self.gain_rx = gain_rx = 15
         self.freq_tx = freq_tx
         self.freq_rx = freq_rx
-        self.fname = fname 
-
-        ##################################################
-        # Message Queues
-        ##################################################
-        blocks_message_sink_0_msgq_out = blocks_message_source_0_msgq_in = gr.msg_queue(2)
+        self.filename_out = filename_out 
+        self.filename_in = filename_in 
 
         ##################################################
         # Blocks
@@ -58,7 +54,7 @@ class repeater(gr.top_block):
         self.uhd_usrp_source_0.set_antenna('TX/RX', 0)
         self.uhd_usrp_source_0.set_bandwidth(10e6, 0)
         self.uhd_usrp_sink_0 = uhd.usrp_sink(
-            ",".join(("", "")),
+            ",".join(("addr=192.168.10.2", "")),
             uhd.stream_args(
                 cpu_format="fc32",
                 channels=range(1),
@@ -70,7 +66,7 @@ class repeater(gr.top_block):
         self.uhd_usrp_sink_0.set_antenna('TX/RX', 0)
         self.uhd_usrp_sink_0.set_bandwidth(10e6, 0)
         self.low_pass_filter_0 = filter.fir_filter_ccf(1, firdes.low_pass(
-            1, samp_rate, samp_rate/2 - 2e3, (samp_rate/2 - 2e3)/4, firdes.WIN_HAMMING, 6.76))
+            1, samp_rate, samp_rate/2 - 2e3, samp_rate/4, firdes.WIN_HAMMING, 6.76))
         self.digital_gmsk_mod_0 = digital.gmsk_mod(
             samples_per_symbol=2,
             bt=0.35,
@@ -88,9 +84,8 @@ class repeater(gr.top_block):
         )
         self.blocks_multiply_const_vxx_1 = blocks.multiply_const_vcc((1, ))
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vcc((1, ))
-        self.blocks_message_source_0 = blocks.message_source(gr.sizeof_char*1, blocks_message_source_0_msgq_in)
-        self.blocks_message_sink_0 = blocks.message_sink(gr.sizeof_char*1, blocks_message_sink_0_msgq_out, False)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, fname, True)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, filename_in, True)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, filename_out, True)
         self.blocks_file_sink_0.set_unbuffered(True)
         self.blks2_packet_encoder_0 = grc_blks2.packet_mod_b(grc_blks2.packet_encoder(
                 samples_per_symbol=2,
@@ -112,9 +107,8 @@ class repeater(gr.top_block):
         # Connections
         ##################################################
         self.connect((self.blks2_packet_decoder_0, 0), (self.blocks_file_sink_0, 0))
-        self.connect((self.blks2_packet_decoder_0, 0), (self.blocks_message_sink_0, 0))
         self.connect((self.blks2_packet_encoder_0, 0), (self.digital_gmsk_mod_0, 0))
-        self.connect((self.blocks_message_source_0, 0), (self.blks2_packet_encoder_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blks2_packet_encoder_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.low_pass_filter_0, 0))
         self.connect((self.blocks_multiply_const_vxx_1, 0), (self.uhd_usrp_sink_0, 0))
         self.connect((self.digital_gmsk_demod_0, 0), (self.blks2_packet_decoder_0, 0))
@@ -161,36 +155,51 @@ class repeater(gr.top_block):
         self.freq_rx = freq_rx
         self.uhd_usrp_source_0.set_center_freq(self.freq_rx, 0)
 
-    def get_fname(self):
-        return self.fname
+    def get_filename_out(self):
+        return self.filename_out
 
-    def set_fname(self, fname):
-        self.fname = fname
-        self.blocks_file_sink_0.open(self.fname)
+    def set_filename_out(self, filename_out):
+        self.filename_out = filename_out
+        self.blocks_file_sink_0.open(self.filename_out)
+
+    def get_filename_in(self):
+        return self.filename_in
+
+    def set_filename_in(self, filename_in):
+        self.filename_in = filename_in
+        self.blocks_file_source_0.open(self.filename_in, True)
 
 
-def repeat(freq_tx, freq_rx, duration, gain, fname, top_block_cls=repeater, options=None):
-    """ Transmits the data being received
-        Returns the amount of data transmitted
-        freq_rx, freq_tx: the corresponding channel central frequencies
-        duration: duration of operation
-        gain: tx gain """
-
-    tb = top_block_cls(freq_tx, freq_rx, gain, fname)
+def transceive(freq_tx, freq_rx, filename_in, filename_out, sec, num_of_ch, gain, top_block_cls=transceiver, options=None):
+    """ Performs independent transmission and reception
+        freq_tx: the central frequency of the transmission channel
+        freq_rx: the central frequency of the reception channel
+        filename_in: file that contains the data about to be transmitted
+        filename_out: file where the received data are stored
+        sec: duration of operation """
+    
+    print "I am transmitting at freq: ", freq_tx
+    filename_list = [filename_out]
+    freq_rx_list = [freq_rx + 100e6*i for i in range(0,num_of_ch) if freq_rx+100e6*i!=freq_tx]
+    tb = top_block_cls(freq_tx, freq_rx_list[0], filename_out, filename_in, gain)
     tb.start()
-    # keep listening until you start receiving
-    while os.stat(fname).st_size<500:
-        pass
-    time.sleep(duration-0.2) # keep receiving and transmitting for the specified time
-    sz = os.stat(fname).st_size
+  
+    for rnd in range(0,3):
+        for freq_rx in freq_rx_list:
+            time.sleep(sec/3.0)
+            print "i am listening at freq: ", freq_rx
+            tb.set_freq_rx(freq_rx)
+        time.sleep(sec/3.0)
     tb.stop()
     tb.wait()
-    return sz
+
 
 if __name__ == '__main__':
-    freq_tx = eval(sys.argv[1])
-    freq_rx = eval(sys.argv[2])
-    duration = eval(sys.argv[3])
-    gain = eval(sys.argv[4])
-    fname = sys.argv[5]
-    repeat(freq_tx, freq_rx, duration, gain, fname)
+   freq_tx = eval(sys.argv[1])
+   freq_rx = eval(sys.argv[2])
+   filename_out = sys.argv[4]
+   filename_in = sys.argv[3]
+   sec = eval(sys.argv[5])
+   num_of_ch = eval(sys.argv[6])
+   gain = eval(sys.argv[7])
+   transceive(freq_tx, freq_rx, filename_in, filename_out, sec, num_of_ch, gain)
