@@ -75,7 +75,7 @@ def transmit(IP_address, udp_port, filename, top_block_cls=udp_transmit, options
     tb = top_block_cls(IP_address, udp_port, filename)
     tb.start()
     # transmition duration
-    time.sleep(0.25)
+    time.sleep(0.2)
     tb.stop()
     tb.wait()
 
