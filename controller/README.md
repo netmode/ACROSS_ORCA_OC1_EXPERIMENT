@@ -23,11 +23,11 @@ It is also necessary to have access to the appropriate USRP devices with at leas
 
 Two controller scripts are included in this module. Specifically:
 * controller.py: Used to synchronize SU nodes during discovery phase,initialization,signaling exchange, transmission round change. Usage:
- ``` python controller.py controller_IP port file1 file2 PU_addr```
+ ``` python controller.py file controller_id port PU_addr```
  Where:
-	* controller_IP: Controller's IP address
+	* controller_id: Controller's Id (as in ipnet.json)
 	* port: The UDP port utilized
-	* file1, file2: Auxiliary text files used for message exchange between the nodes and the controller
+	* file1: Auxiliary text file used for message exchange between the nodes and the controller
 	
 * semipar_controller.py: Used for the semi-parallel gibbs sampling phase, in order to update the nodes' states after each epoch. Usage:
 ```python semipar_controller.py file controller_ID port ```
