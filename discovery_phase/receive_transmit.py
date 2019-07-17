@@ -170,7 +170,7 @@ class receive_transmit(gr.top_block):
         self.blocks_file_source_0.open(self.filename_in, True)
 
 
-def transceive(freq_tx, freq_rx, filename_in, filename_out, sec, num_of_ch, gain, top_block_cls=transceiver, options=None):
+def transceive(freq_tx, freq_rx, filename_in, filename_out, sec, num_of_ch, gain, top_block_cls=receive_transmit, options=None):
     """ Performs independent transmission and reception
         freq_tx: the central frequency of the transmission channel
         freq_rx: the central frequency of the reception channel
